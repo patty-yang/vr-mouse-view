@@ -82,10 +82,35 @@ function handleDragMove(event: MouseEvent) {
   camera.rotation.y += event.movementX * rotateSpeed
 }
 
-onMounted(() => {
+function listenerContainerEvents(target: HTMLDivElement) {
+  target.addEventListener('mousedown', handleDragStart, false)
+  target.addEventListener('mouseup', handleDragEnd, false)
+  target.addEventListener('mouseout', handleDragEnd, false)
+  target.addEventListener('mousemove', handleDragMove, false)
+}
+
+function unListenerContainerEvents(target: HTMLDivElement) {
+  target.removeEventListener('mousedown', handleDragStart, false)
+  target.removeEventListener('mouseup', handleDragEnd, false)
+  target.removeEventListener('mouseout', handleDragEnd, false)
+  target.removeEventListener('mousemove', handleDragMove, false)
+}
+
+function animateCameraTo(z: number) {
+  gsap.to(camera.position, {
+    duration: 1,
+    x: 0,
+    y: 0,
+    z,
+  })
+}
+
+function initRooms() {
   room = new Room('客厅', 'living', '/images/livingRoom/', scene)
   balconyRoom = new Room('阳台', 'balcony', '/images/balcony/', scene, new THREE.Vector3(0, 0, -10))
+}
 
+function initSprites() {
   const balconySprite = new PositionSprite(
     '阳台',
     new THREE.Vector3(0, 0, -4),
@@ -95,14 +120,7 @@ onMounted(() => {
   )
   sprites.push(balconySprite)
 
-  balconySprite.onClick(() => {
-    gsap.to(camera.position, {
-      duration: 1,
-      x: 0,
-      y: 0,
-      z: -10,
-    })
-  })
+  balconySprite.onClick(() => animateCameraTo(-10))
 
   const balconyBackSprite = new PositionSprite(
     '客厅',
@@ -112,27 +130,25 @@ onMounted(() => {
     renderer.domElement,
   )
   sprites.push(balconyBackSprite)
-  balconyBackSprite.onClick(() => {
-    gsap.to(camera.position, {
-      duration: 1,
-      x: 0,
-      y: 0,
-      z: 0,
-    })
-  })
+  balconyBackSprite.onClick(() => animateCameraTo(0))
+}
 
-  if (container.value) {
-    mountedContainer = container.value
-    mountedContainer.appendChild(renderer.domElement)
-    resizeRenderer()
-    window.addEventListener('resize', resizeRenderer)
-    renderLoop()
+function mountScene() {
+  if (!container.value)
+    return
 
-    mountedContainer.addEventListener('mousedown', handleDragStart, false)
-    mountedContainer.addEventListener('mouseup', handleDragEnd, false)
-    mountedContainer.addEventListener('mouseout', handleDragEnd, false)
-    mountedContainer.addEventListener('mousemove', handleDragMove, false)
-  }
+  mountedContainer = container.value
+  mountedContainer.appendChild(renderer.domElement)
+  resizeRenderer()
+  window.addEventListener('resize', resizeRenderer)
+  renderLoop()
+  listenerContainerEvents(mountedContainer)
+}
+
+onMounted(() => {
+  initRooms()
+  initSprites()
+  mountScene()
 })
 
 onUnmounted(() => {
@@ -147,12 +163,8 @@ onUnmounted(() => {
   sprites.length = 0
   isMouseDown = false
 
-  if (mountedContainer) {
-    mountedContainer.removeEventListener('mousedown', handleDragStart, false)
-    mountedContainer.removeEventListener('mouseup', handleDragEnd, false)
-    mountedContainer.removeEventListener('mouseout', handleDragEnd, false)
-    mountedContainer.removeEventListener('mousemove', handleDragMove, false)
-  }
+  if (mountedContainer)
+    unListenerContainerEvents(mountedContainer)
 
   const containerElement = mountedContainer
   if (containerElement && renderer.domElement.parentElement === containerElement)

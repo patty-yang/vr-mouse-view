@@ -1,5 +1,44 @@
 import * as THREE from 'three'
 
+function createCanvas(text: string) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024
+  canvas.height = 1024
+  const context = canvas.getContext('2d')!
+  const cardW = 620
+  const cardH = 230
+  const cardX = (canvas.width - cardW) / 2
+  const cardY = (canvas.height - cardH) / 2
+
+  context.shadowColor = 'rgba(0,0,0,.32)'
+  context.shadowBlur = 24
+  context.shadowOffsetY = 8
+  context.fillStyle = 'rgba(0,0,0,.82)'
+  context.beginPath()
+  context.roundRect(cardX, cardY, cardW, cardH, 44)
+  context.fill()
+  context.shadowColor = 'transparent'
+  context.shadowBlur = 0
+  context.shadowOffsetY = 0
+
+  context.strokeStyle = 'rgba(255,255,255,.18)'
+  context.lineWidth = 2
+  context.stroke()
+
+  context.fillStyle = 'rgba(255,255,255,.08)'
+  context.beginPath()
+  context.roundRect(cardX + 16, cardY + 14, cardW - 32, 56, 28)
+  context.fill()
+
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.font = '700 128px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
+  context.fillStyle = 'rgba(255,255,255,.96)'
+  context.fillText(text, canvas.width / 2, canvas.height / 2)
+
+  return canvas
+}
+
 export class PositionSprite {
   public readonly sprite: THREE.Sprite
 
@@ -15,18 +54,7 @@ export class PositionSprite {
     camera: THREE.Camera,
     domElement: HTMLElement,
   ) {
-    // 定义canvas
-    const canvas = document.createElement('canvas')
-    canvas.width = 1024
-    canvas.height = 1024
-    const context = canvas.getContext('2d')!
-    context.fillStyle = 'rgba(100,100,100,.7)'
-    context.fillRect(0, 256, canvas.width, canvas.height / 2)
-    context.textAlign = 'center'
-    context.textBaseline = 'middle'
-    context.font = 'bold 200px Arial'
-    context.fillStyle = 'white'
-    context.fillText(text, canvas.width / 2, canvas.height / 2)
+    const canvas = createCanvas(text)
 
     this.texture = new THREE.CanvasTexture(canvas)
     this.material = new THREE.SpriteMaterial({
