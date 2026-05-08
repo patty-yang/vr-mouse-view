@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { gsap } from 'gsap'
 import * as THREE from 'three'
 import { onMounted, onUnmounted, useTemplateRef } from 'vue'
-import { Room } from './utils'
+import { PositionSprite, Room } from './utils'
 
 const container = useTemplateRef<HTMLDivElement>('container')
 /**
@@ -32,6 +33,9 @@ camera.rotation.order = 'YXZ'
 const renderer = new THREE.WebGLRenderer() // 创建渲染器
 
 let room: Room | null = null
+let balconyRoom: Room | null = null
+
+const sprites: PositionSprite[] = []
 let animationFrameId: number | null = null
 let isMouseDown = false
 let mountedContainer: HTMLDivElement | null = null
@@ -80,6 +84,42 @@ function handleDragMove(event: MouseEvent) {
 
 onMounted(() => {
   room = new Room('客厅', 'living', '/images/livingRoom/', scene)
+  balconyRoom = new Room('阳台', 'balcony', '/images/balcony/', scene, new THREE.Vector3(0, 0, -10))
+
+  const balconySprite = new PositionSprite(
+    '阳台',
+    new THREE.Vector3(0, 0, -4),
+    scene,
+    camera,
+    renderer.domElement,
+  )
+  sprites.push(balconySprite)
+
+  balconySprite.onClick(() => {
+    gsap.to(camera.position, {
+      duration: 1,
+      x: 0,
+      y: 0,
+      z: -10,
+    })
+  })
+
+  const balconyBackSprite = new PositionSprite(
+    '客厅',
+    new THREE.Vector3(1, 0, -6),
+    scene,
+    camera,
+    renderer.domElement,
+  )
+  sprites.push(balconyBackSprite)
+  balconyBackSprite.onClick(() => {
+    gsap.to(camera.position, {
+      duration: 1,
+      x: 0,
+      y: 0,
+      z: 0,
+    })
+  })
 
   if (container.value) {
     mountedContainer = container.value
@@ -101,6 +141,10 @@ onUnmounted(() => {
   window.removeEventListener('resize', resizeRenderer)
   room?.dispose()
   room = null
+  balconyRoom?.dispose()
+  balconyRoom = null
+  sprites.forEach(sprite => sprite.dispose())
+  sprites.length = 0
   isMouseDown = false
 
   if (mountedContainer) {
