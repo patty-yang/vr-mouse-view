@@ -15,17 +15,17 @@ const camera = new THREE.PerspectiveCamera(
 )
 
 // 设计相机的位置
-camera.position.z = 30
-
+// camera.position.z = 30
+camera.position.set(0, 0, .1)
 let controls: OrbitControls
 // 创建球体
 // const geometry = new THREE.SphereGeometry(10, 32, 32); // 球体几何体
 // const material = new THREE.MeshBasicMaterial(
-  // {
-  //   color: 0x0000ff, //设置材质颜色
-  //   transparent: true,//开启透明
-  //   opacity: 0.5,//设置透明度
-  // }
+// {
+//   color: 0x0000ff, //设置材质颜色
+//   transparent: true,//开启透明
+//   opacity: 0.5,//设置透明度
+// }
 // )
 
 const geometry = new THREE.BoxGeometry(10, 10, 10);
@@ -38,10 +38,31 @@ const material = new THREE.MeshBasicMaterial(
   }
 );
 
+const materials: THREE.MeshBasicMaterial[] = []
 
-const sphere = new THREE.Mesh(geometry, material); // 创建球体网格
+const texture_right = new THREE.TextureLoader().load('./images/livingRoom/living_r.jpg');
+materials.push(new THREE.MeshBasicMaterial({ map: texture_right }));
+
+const texture_left = new THREE.TextureLoader().load('./images/livingRoom/living_l.jpg');
+materials.push(new THREE.MeshBasicMaterial({ map: texture_left }));
+
+const texture_up = new THREE.TextureLoader().load('./images/livingRoom/living_u.jpg');
+materials.push(new THREE.MeshBasicMaterial({ map: texture_up }));
+
+const texture_down = new THREE.TextureLoader().load('./images/livingRoom/living_d.jpg');
+materials.push(new THREE.MeshBasicMaterial({ map: texture_down }));
+
+const texture_front = new THREE.TextureLoader().load('./images/livingRoom/living_f.jpg');
+materials.push(new THREE.MeshBasicMaterial({ map: texture_front }));
+
+const texture_back = new THREE.TextureLoader().load('./images/livingRoom/living_b.jpg');
+materials.push(new THREE.MeshBasicMaterial({ map: texture_back }));
+
+
+const sphere = new THREE.Mesh(geometry, materials); // 创建球体网格
+sphere.geometry.scale(1, 1, -1)
 scene.add(sphere); // 将球体添加到场景中
- 
+
 // 添加坐标辅助器
 const axesHelper = new THREE.AxesHelper(150);
 scene.add(axesHelper);
