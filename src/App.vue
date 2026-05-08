@@ -1,34 +1,34 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, useTemplateRef, type Ref } from 'vue'
-import * as THREE from 'three'
+import type { Ref } from 'vue'
 // import { OrbitControls } from 'three/examples/jsm/Addons.js'
 import gsap from 'gsap'
-import { clipping } from 'three/src/nodes/accessors/ClippingNode.js'
+import * as THREE from 'three'
+import { onMounted, ref, useTemplateRef } from 'vue'
 
-const scene = new THREE.Scene()  // 初始化一个场景
+const scene = new THREE.Scene() // 初始化一个场景
 
 const container = useTemplateRef('container')
 const toolTipContainer = useTemplateRef('toolTipContainer')
 const toolTipContent: Ref<Record<string, any>> = ref({
   name: '',
   type: '',
-  description: ''
+  description: '',
 })
 const toolipPosition = ref({
   left: '-100%',
-  top: '-100%'
+  top: '-100%',
 })
 
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight, // 宽高比
-  0.1, // 近的一面 
-  1000 // 远的一面
+  0.1, // 近的一面
+  1000, // 远的一面
 )
 
 // 设计相机的位置
 // camera.position.z = 30
-camera.position.set(0, 0, .1)
+camera.position.set(0, 0, 0.1)
 // let controls: OrbitControls
 
 const renderer = new THREE.WebGLRenderer() // 创建渲染器
@@ -74,12 +74,11 @@ materials.push(new THREE.MeshBasicMaterial({ map: texture_front }))
 const texture_back = new THREE.TextureLoader().load('./images/livingRoom/living_b.jpg')
 materials.push(new THREE.MeshBasicMaterial({ map: texture_back }))
 
-
 const canvas = document.createElement('canvas')
 canvas.width = 1024
 canvas.height = 1024
 const context = canvas.getContext('2d')!
-context.fillStyle = "rgba(100,100,100,.7)"
+context.fillStyle = 'rgba(100,100,100,.7)'
 context.fillRect(0, 256, canvas.width, canvas.height / 2)
 context.textAlign = 'center'
 context.textBaseline = 'middle'
@@ -93,16 +92,15 @@ const balconySpriteMaterial = new THREE.SpriteMaterial({ map: balconySpriteTextu
 const balconySprite = new THREE.Sprite(balconySpriteMaterial)
 balconySprite.position.set(0, 0, -4)
 
-
 // 阳台立方体
-const roomPrefix = "balcony"
+const roomPrefix = 'balcony'
 const arr = [
   `${roomPrefix}_r`,
   `${roomPrefix}_l`,
   `${roomPrefix}_u`,
   `${roomPrefix}_d`,
   `${roomPrefix}_f`,
-  `${roomPrefix}_b`
+  `${roomPrefix}_b`,
 ]
 const balconyGeometry = new THREE.BoxGeometry(10, 10, 10)
 const balconyMaterials: THREE.MeshBasicMaterial[] = []
@@ -114,9 +112,8 @@ const balconyBox = new THREE.Mesh(balconyGeometry, balconyMaterials)
 balconyBox.geometry.scale(1, 1, -1)
 balconyBox.position.set(0, 0, -10)
 
-
 // 创建信息点
-const informationTexture = new THREE.TextureLoader().load("./images/dot.png")
+const informationTexture = new THREE.TextureLoader().load('./images/dot.png')
 const informationSpriteMaterial = new THREE.SpriteMaterial({
   map: informationTexture,
   transparent: true,
@@ -125,11 +122,10 @@ const informationSprite = new THREE.Sprite(informationSpriteMaterial)
 informationSprite.position.set(1.5, -0.1, -3)
 informationSprite.scale.set(0.2, 0.2, 0.2)
 informationSprite.userData = {
-  type: "information",
-  name: "信息点",
-  description: "这是一个信息点",
+  type: 'information',
+  name: '信息点',
+  description: '这是一个信息点',
 }
-
 
 const sphere = new THREE.Mesh(geometry, materials) // 创建球体网格
 sphere.geometry.scale(1, 1, -1)
@@ -138,14 +134,13 @@ scene.add(balconyBox)
 scene.add(balconySprite)
 scene.add(informationSprite)
 
-
 // 添加坐标辅助器
 // const axesHelper = new THREE.AxesHelper(150)
 // scene.add(axesHelper)
 
-const render = () => {
+function render() {
   requestAnimationFrame(render)
-  renderer.render(scene, camera) //执行渲染操作
+  renderer.render(scene, camera) // 执行渲染操作
 }
 
 const raycaster = new THREE.Raycaster()
@@ -153,7 +148,6 @@ const pointer = new THREE.Vector2()
 const poiObjects: THREE.Sprite[] = []
 poiObjects.push(balconySprite)
 poiObjects.push(informationSprite)
-
 
 window.addEventListener('click', (event: MouseEvent) => {
   event.preventDefault()
@@ -170,13 +164,12 @@ window.addEventListener('click', (event: MouseEvent) => {
       duration: 1,
       x: 0,
       y: 0,
-      z: -10
+      z: -10,
     })
   }
 })
 
-
-const tooltipShow = (event: MouseEvent) => {
+function tooltipShow(event: MouseEvent) {
   event.preventDefault()
   // 获取到当前鼠标位置
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1
@@ -201,42 +194,42 @@ const tooltipShow = (event: MouseEvent) => {
     const vector = new THREE.Vector3(intersects[0].object.position.x, intersects[0].object.position.y, intersects[0].object.position.z)
     const position = vector.project(camera)
 
-    let left = Math.round(
-      elementWidth * position.x +
-      elementWidth -
-      toolTipContainer.value!.clientWidth / 2
-    );
+    const left = Math.round(
+      elementWidth * position.x
+      + elementWidth
+      - toolTipContainer.value!.clientWidth / 2,
+    )
 
-    let top = Math.round(
-      -elementHeight * position.y +
-      elementHeight -
-      toolTipContainer.value!.clientHeight / 2
-    );
+    const top = Math.round(
+      -elementHeight * position.y
+      + elementHeight
+      - toolTipContainer.value!.clientHeight / 2,
+    )
 
     toolipPosition.value = {
       left: `${left}px`,
       top: `${top}px`,
-    };
+    }
 
-    toolTipContent.value = intersects[0].object.userData;
-  } else {
+    toolTipContent.value = intersects[0].object.userData
+  }
+  else {
     tootipHide(event)
   }
 }
 
-const tootipHide = (event: MouseEvent) => {
+function tootipHide(event: MouseEvent) {
   event.preventDefault()
   toolipPosition.value = {
     left: '-100%',
-    top: '-100%'
+    top: '-100%',
   }
   toolTipContent.value = {
     name: '',
     type: '',
-    description: ''
+    description: '',
   }
 }
-
 
 onMounted(() => {
   if (container.value) {
@@ -247,24 +240,23 @@ onMounted(() => {
     render()
 
     let isMouseDown = false
-    container.value.addEventListener("mousedown", () => {
+    container.value.addEventListener('mousedown', () => {
       isMouseDown = true
     }, false)
-    container.value.addEventListener("mouseup", () => {
+    container.value.addEventListener('mouseup', () => {
       isMouseDown = false
     }, false)
-    container.value.addEventListener("mouseout", () => {
+    container.value.addEventListener('mouseout', () => {
       isMouseDown = false
     }, false)
 
-    container.value.addEventListener("mousemove", (event) => {
+    container.value.addEventListener('mousemove', (event) => {
       if (isMouseDown) {
         camera.rotation.x += event.movementY * 0.01
         camera.rotation.y += event.movementX * 0.01
-        camera.rotation.order = "YXZ"
+        camera.rotation.order = 'YXZ'
       }
     })
-
 
     renderer.domElement.addEventListener('mousemove', tooltipShow)
     toolTipContainer.value!.addEventListener('mouseleave', tootipHide)
@@ -273,8 +265,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container" ref="container"></div>
-  <div class="tooltip" :style="toolipPosition" ref="toolTipContainer">
+  <div ref="container" class="container" />
+  <div ref="toolTipContainer" class="tooltip" :style="toolipPosition">
     <div>{{ toolTipContent.name }}</div>
     <div>{{ toolTipContent.description }}</div>
   </div>
