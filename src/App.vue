@@ -1,110 +1,68 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import * as THREE from 'three'
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
-// 初始化场景
-const scene = new THREE.Scene()
-// 初始化相机
+import { OrbitControls } from 'three/examples/jsm/Addons.js'
+
+const scene = new THREE.Scene()  // 初始化一个场景
+
+const container = useTemplateRef('container')
+
 const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
+  75,
+  window.innerWidth / window.innerHeight, // 宽高比
+  0.1, // 近的一面 
+  1000 // 远的一面
 )
 
-// 设置一个相机的位置
-camera.position.set(0, 0, 10)
-const useBox = () => {
-  // 上下左右前后四个面贴图
-  const materials: THREE.MeshBasicMaterial[] = []
+// 设计相机的位置
+camera.position.z = 30
 
-  const texture_right = new THREE.TextureLoader().load(
-      './images/livingRoom/living_r.jpg'
-  )
-  materials.push(new THREE.MeshBasicMaterial({map: texture_right}))
+let controls: OrbitControls
+// 创建球体
+// const geometry = new THREE.SphereGeometry(10, 32, 32); // 球体几何体
+// const material = new THREE.MeshBasicMaterial(
+  // {
+  //   color: 0x0000ff, //设置材质颜色
+  //   transparent: true,//开启透明
+  //   opacity: 0.5,//设置透明度
+  // }
+// )
 
-  const texture_left = new THREE.TextureLoader().load(
-      './images/livingRoom/living_l.jpg'
-  )
-  materials.push(new THREE.MeshBasicMaterial({map: texture_left}))
-
-  const texture_up = new THREE.TextureLoader().load(
-      './images/livingRoom/living_u.jpg'
-  )
-  materials.push(new THREE.MeshBasicMaterial({map: texture_up}))
-
-  const texture_down = new THREE.TextureLoader().load(
-      './images/livingRoom/living_d.jpg'
-  )
-  materials.push(new THREE.MeshBasicMaterial({map: texture_down}))
-
-  const texture_front = new THREE.TextureLoader().load(
-      './images/livingRoom/living_f.jpg'
-  )
-  materials.push(new THREE.MeshBasicMaterial({map: texture_front}))
-
-  const texture_back = new THREE.TextureLoader().load(
-      './images/livingRoom/living_b.jpg'
-  )
-  materials.push(new THREE.MeshBasicMaterial({map: texture_back}))
-  // 根据几何体和材质创建物体
-  const cube = new THREE.Mesh(geometry, materials)
-  // 将墙纸放到哪层
-  cube.geometry.scale(1, 1, -1)
-  // 将几何体添加到场景中
-  scene.add(cube)
-}
-
-const useSphere = () => {
-  const geometry = new THREE.SphereGeometry(1, 50, 50)
-  geometry.scale(1, 1, -1)
-  const texture = new THREE.TextureLoader().load('./images/scene.jpeg')
-  const material = new THREE.MeshBasicMaterial({map: texture})
-  const sphere = new THREE.Mesh(geometry, material)
-  scene.add(sphere)
-}
-// 创建几何体
-const geometry = new THREE.BoxGeometry(10, 10, 10)
+const geometry = new THREE.BoxGeometry(10, 10, 10);
 // 创建材质
-// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-// 添加坐标轴辅助器
-// const axesHelper = new THREE.AxesHelper(20)
-// scene.add(axesHelper)
+const material = new THREE.MeshBasicMaterial(
+  {
+    color: 0x0000ff, //设置材质颜色
+    transparent: true,//开启透明
+    opacity: 0.5,//设置透明度
+  }
+);
 
-// useBox()
-useSphere()
 
-window.addEventListener('resize', () => {
-  // 更新摄像头
-  camera.aspect = window.innerWidth / window.innerHeight
-  // 更新摄像机的投影矩阵
-  camera.updateProjectionMatrix()
-  // 更新渲染器
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  // 设置渲染器的像素比
-  renderer.setPixelRatio(window.devicePixelRatio)
-})
-// 初始化渲染器
-const renderer = new THREE.WebGLRenderer()
-// 设置渲染器的尺寸大小
-renderer.setSize(window.innerWidth, window.innerHeight)
-// 将webgl渲染的canvas内容添加到body上
-const container = ref<HTMLDivElement | null>(null)
+const sphere = new THREE.Mesh(geometry, material); // 创建球体网格
+scene.add(sphere); // 将球体添加到场景中
+ 
+// 添加坐标辅助器
+const axesHelper = new THREE.AxesHelper(150);
+scene.add(axesHelper);
+
+
+const renderer = new THREE.WebGLRenderer() // 创建渲染器
+renderer.setSize(window.innerWidth, window.innerHeight) // 设置渲染器的大小
+
 
 const render = () => {
-  renderer.render(scene, camera)
+  renderer.render(scene, camera); //执行渲染操作
   requestAnimationFrame(render)
 }
 
 onMounted(() => {
   if (container.value) {
-    // 创建轨道控制器
-    const controls = new OrbitControls(camera, renderer.domElement)
-    // 设置控制器阻尼，让控制器更有真实效果,必须在动画循环里调用.update()。
-    controls.enableDamping = true
-    controls.update()
+    // 添加轨道控制器
+    controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true;
+    controls.update();
 
-    // 将渲染器添加到页面上
     container.value.appendChild(renderer.domElement)
     render()
   }
