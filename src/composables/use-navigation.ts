@@ -4,6 +4,7 @@ import { onMounted, onUnmounted } from 'vue'
 interface IProps {
   scene: THREE.Scene // 场景
   camera: THREE.Camera // 相机
+  domElement: HTMLCanvasElement // 渲染 canvas
   position: THREE.Vector3 // 位置
   text: string // 文本
   cb: () => void // 回调函数
@@ -15,8 +16,8 @@ type Create = Omit<IProps, 'text'> & {
 
 function createCanvas(text: string): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
-  canvas.width = 1024
-  canvas.height = 1024
+  canvas.width = 716
+  canvas.height = 310
   const context = canvas.getContext('2d')!
   const cardW = 620
   const cardH = 230
@@ -40,7 +41,13 @@ function createCanvas(text: string): HTMLCanvasElement {
 
   context.fillStyle = 'rgba(255,255,255,.08)'
   context.beginPath()
-  context.roundRect(cardX + 16, cardY + 14, cardW - 32, 56, 28)
+  context.roundRect(
+    cardX + 16,
+    cardY + 14,
+    cardW - 32,
+    56,
+    28,
+  )
   context.fill()
 
   context.textAlign = 'center'
@@ -53,7 +60,7 @@ function createCanvas(text: string): HTMLCanvasElement {
 }
 
 function createSprite(props: Create) {
-  const { scene, camera, canvas, position, cb } = props
+  const { scene, camera, domElement, canvas, position, cb } = props
   const texture = new THREE.CanvasTexture(canvas)
   const material = new THREE.SpriteMaterial({
     map: texture,
@@ -62,12 +69,21 @@ function createSprite(props: Create) {
   const sprite = new THREE.Sprite(material)
   const raycaster = new THREE.Raycaster()
   sprite.position.copy(position)
+  sprite.scale.set(
+    canvas.width / 1024,
+    canvas.height / 1024,
+    1,
+  )
   scene.add(sprite)
 
   function handleClick(event: MouseEvent) {
+    const rect = domElement.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0)
+      return
+
     const pointer = new THREE.Vector2(
-      (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1,
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      -((event.clientY - rect.top) / rect.height) * 2 + 1,
     )
 
     raycaster.setFromCamera(pointer, camera)
@@ -77,11 +93,11 @@ function createSprite(props: Create) {
   }
 
   onMounted(() => {
-    window.addEventListener('click', handleClick)
+    domElement.addEventListener('click', handleClick)
   })
 
   onUnmounted(() => {
-    window.removeEventListener('click', handleClick)
+    domElement.removeEventListener('click', handleClick)
     sprite.parent?.remove(sprite)
     texture.dispose()
     material.dispose()
@@ -91,7 +107,7 @@ function createSprite(props: Create) {
 }
 
 export function useNavigationSprite(props: IProps) {
-  const { scene, camera, position, text, cb } = props
+  const { scene, camera, domElement, position, text, cb } = props
   const canvas = createCanvas(text)
-  return createSprite({ scene, camera, position, canvas, cb })
+  return createSprite({ scene, camera, domElement, position, canvas, cb })
 }
