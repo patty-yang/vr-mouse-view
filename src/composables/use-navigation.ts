@@ -1,20 +1,8 @@
+import type { CreateNavigationSpriteOptions, UseNavigationSpriteOptions } from '../types'
 import * as THREE from 'three'
 import { onMounted, onUnmounted } from 'vue'
 
-interface IProps {
-  scene: THREE.Scene // 场景
-  camera: THREE.Camera // 相机
-  domElement: HTMLCanvasElement // 渲染 canvas
-  position: THREE.Vector3 // 位置
-  text: string // 文本
-  cb: () => void // 回调函数
-}
-
-type Create = Omit<IProps, 'text'> & {
-  canvas: HTMLCanvasElement
-}
-
-function createCanvas(text: string): HTMLCanvasElement {
+function createCanvas(label: string): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = 716
   canvas.height = 310
@@ -46,7 +34,7 @@ function createCanvas(text: string): HTMLCanvasElement {
     cardY + 14,
     cardW - 32,
     56,
-    28,
+    28
   )
   context.fill()
 
@@ -54,17 +42,17 @@ function createCanvas(text: string): HTMLCanvasElement {
   context.textBaseline = 'middle'
   context.font = '700 128px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
   context.fillStyle = 'rgba(255,255,255,.96)'
-  context.fillText(text, canvas.width / 2, canvas.height / 2)
+  context.fillText(label, canvas.width / 2, canvas.height / 2)
 
   return canvas
 }
 
-function createSprite(props: Create) {
-  const { scene, camera, domElement, canvas, position, cb } = props
+function createSprite(props: CreateNavigationSpriteOptions) {
+  const { scene, camera, domElement, canvas, position, onClick } = props
   const texture = new THREE.CanvasTexture(canvas)
   const material = new THREE.SpriteMaterial({
     map: texture,
-    transparent: true,
+    transparent: true
   })
   const sprite = new THREE.Sprite(material)
   const raycaster = new THREE.Raycaster()
@@ -72,7 +60,7 @@ function createSprite(props: Create) {
   sprite.scale.set(
     canvas.width / 1024,
     canvas.height / 1024,
-    1,
+    1
   )
   scene.add(sprite)
 
@@ -83,13 +71,13 @@ function createSprite(props: Create) {
 
     const pointer = new THREE.Vector2(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      -((event.clientY - rect.top) / rect.height) * 2 + 1
     )
 
     raycaster.setFromCamera(pointer, camera)
 
     if (raycaster.intersectObject(sprite).length > 0)
-      cb()
+      onClick()
   }
 
   onMounted(() => {
@@ -106,8 +94,8 @@ function createSprite(props: Create) {
   return sprite
 }
 
-export function useNavigationSprite(props: IProps) {
-  const { scene, camera, domElement, position, text, cb } = props
-  const canvas = createCanvas(text)
-  return createSprite({ scene, camera, domElement, position, canvas, cb })
+export function useNavigationSprite(props: UseNavigationSpriteOptions) {
+  const { scene, camera, domElement, position, label, onClick } = props
+  const canvas = createCanvas(label)
+  return createSprite({ scene, camera, domElement, position, canvas, onClick })
 }

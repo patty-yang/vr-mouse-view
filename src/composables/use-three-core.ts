@@ -18,7 +18,7 @@ export function useThreeCore(container: Ref<HTMLDivElement | null>) {
     75,
     1, // 宽高比
     0.1, // 近的一面
-    1000, // 远的一面
+    1000 // 远的一面
   )
 
   /**
@@ -84,6 +84,6 @@ export function useThreeCore(container: Ref<HTMLDivElement | null>) {
   return {
     scene,
     camera,
-    renderer,
+    renderer
   }
 }

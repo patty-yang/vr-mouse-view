@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Vector3Tuple } from './types'
+import type { Vector3Coordinates } from './types'
 import { gsap } from 'gsap'
 
 import { useTemplateRef } from 'vue'
@@ -14,14 +14,14 @@ useRoom(scene)
 
 useSceneEvents(camera, container)
 
-navigationPoints.forEach(({ text, position, target = defaultCameraTarget }) => {
+navigationPoints.forEach(({ label, position, cameraTarget = defaultCameraTarget }) => {
   useNavigationSprite({
     scene,
     camera,
     domElement: renderer.domElement,
     position,
-    text,
-    cb: () => animateCameraTo(target),
+    label,
+    onClick: () => animateCameraTo(cameraTarget)
   })
 })
 
@@ -29,15 +29,15 @@ const { tooltip } = useTooltip({
   scene,
   camera,
   points: tooltipPoints,
-  domElement: renderer.domElement,
+  domElement: renderer.domElement
 })
 
-function animateCameraTo([x, y, z]: Vector3Tuple = defaultCameraTarget) {
+function animateCameraTo([x, y, z]: Vector3Coordinates = defaultCameraTarget) {
   gsap.to(camera.position, {
     duration: 1,
     x,
     y,
-    z,
+    z
   })
 }
 </script>

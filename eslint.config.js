@@ -1,11 +1,18 @@
 import antfu from '@antfu/eslint-config'
 
-export default antfu({
-  formatters: true,
-  rules: {
-    semi: ['error', 'never'],
-    'comma-dangle': ['error', 'never'],
-    quotes: ['error', 'single', { avoidEscape: true }]
+export default antfu(
+  {
+    formatters: true,
+    stylistic: {
+      quotes: 'single',
+      semi: false
+    },
+    vue: true
   },
-  vue: true
-})
+  {
+    rules: {
+      'style/comma-dangle': ['error', 'never'],
+      'style/quote-props': ['error', 'as-needed']
+    }
+  }
+)

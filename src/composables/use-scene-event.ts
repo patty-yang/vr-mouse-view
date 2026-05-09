@@ -24,7 +24,7 @@ export function useSceneEvents(camera: THREE.Camera, target: Ref<HTMLDivElement 
     camera.rotation.x = THREE.MathUtils.clamp(
       camera.rotation.x + event.movementY * ROTATE_SPEED,
       -MAX_PITCH,
-      MAX_PITCH,
+      MAX_PITCH
     )
     camera.rotation.y += event.movementX * ROTATE_SPEED
   }

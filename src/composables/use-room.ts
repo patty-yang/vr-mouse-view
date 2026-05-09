@@ -19,7 +19,7 @@ const textureLoader = new THREE.TextureLoader()
 const roomConfigs: RoomConfig[] = [
   { roomPrefix: 'living', textureUrl: '/images/livingRoom/' },
   { roomPrefix: 'balcony', textureUrl: '/images/balcony/', position: new THREE.Vector3(2, 0, -10) },
-  { roomPrefix: 'kitchen', textureUrl: '/images/kitchen/', position: new THREE.Vector3(0, 0, 10) },
+  { roomPrefix: 'kitchen', textureUrl: '/images/kitchen/', position: new THREE.Vector3(0, 0, 10) }
 ]
 
 function createRoom(scene: THREE.Scene, { roomPrefix, textureUrl, position, euler }: RoomConfig) {
@@ -28,8 +28,8 @@ function createRoom(scene: THREE.Scene, { roomPrefix, textureUrl, position, eule
 
   const materials = ROOM_TEXTURE_SUFFIXES.map(suffix =>
     new THREE.MeshBasicMaterial({
-      map: textureLoader.load(`${textureUrl}${roomPrefix}_${suffix}.jpg`),
-    }),
+      map: textureLoader.load(`${textureUrl}${roomPrefix}_${suffix}.jpg`)
+    })
   )
 
   const box = new THREE.Mesh(geometry, materials)
@@ -47,7 +47,7 @@ function createRoom(scene: THREE.Scene, { roomPrefix, textureUrl, position, eule
         material.map?.dispose()
         material.dispose()
       })
-    },
+    }
   }
 }
 

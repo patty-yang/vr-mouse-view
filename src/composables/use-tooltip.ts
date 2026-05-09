@@ -1,57 +1,59 @@
-import type { TooltipContent, TooltipPoint } from '../types'
+import type {
+  TooltipContent,
+  TooltipHotspot,
+  TooltipOverlayState,
+  TooltipSpriteResources,
+  UseTooltipOptions
+} from '../types'
 import * as THREE from 'three'
 import { onMounted, onUnmounted, reactive } from 'vue'
 
-interface IProps {
-  scene: THREE.Scene
-  camera: THREE.Camera
-  points: TooltipPoint[]
-  domElement: HTMLCanvasElement
-}
-
-interface TooltipSpriteEntity {
-  material: THREE.SpriteMaterial
-  sprite: THREE.Sprite
-  texture: THREE.Texture
-}
-
-interface TooltipState {
-  content: TooltipContent | null
-  visible: boolean
-  x: number
-  y: number
-}
-
-function createTooltipSprite(scene: THREE.Scene, { position, url, userData }: TooltipPoint): TooltipSpriteEntity {
-  const texture = new THREE.TextureLoader().load(url)
+function createTooltipSprite(scene: THREE.Scene, { position, textureUrl, content }: TooltipHotspot): TooltipSpriteResources {
+  const texture = new THREE.TextureLoader().load(textureUrl)
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
 
   const sprite = new THREE.Sprite(material)
   sprite.position.copy(position)
   sprite.scale.set(0.2, 0.2, 0.2)
-  sprite.userData = userData
+  sprite.userData = content
 
   scene.add(sprite)
 
   return {
     texture,
     material,
-    sprite,
+    sprite
   }
 }
 
-export function useTooltip(props: IProps) {
+function calculateTooltipState(sprite: THREE.Sprite, camera: THREE.Camera, domElement: HTMLCanvasElement): TooltipOverlayState | null {
+  const rect = domElement.getBoundingClientRect()
+  if (rect.width <= 0 || rect.height <= 0)
+    return null
+
+  const projectedPosition = sprite.position.clone()
+  camera.updateMatrixWorld()
+  projectedPosition.project(camera)
+
+  return {
+    content: sprite.userData as TooltipContent,
+    visible: true,
+    x: ((projectedPosition.x + 1) / 2) * rect.width,
+    y: ((-projectedPosition.y + 1) / 2) * rect.height
+  }
+}
+
+export function useTooltip(props: UseTooltipOptions) {
   const { scene, points, domElement, camera } = props
   const tooltipSpriteList = points.map(item => createTooltipSprite(scene, item))
   const pointer = new THREE.Vector2()
-  const projectedPosition = new THREE.Vector3()
   const raycaster = new THREE.Raycaster()
 
-  const tooltip = reactive<TooltipState>({
+  const tooltip = reactive<TooltipOverlayState>({
     content: null,
     visible: false,
     x: 0,
-    y: 0,
+    y: 0
   })
 
   function clearTooltip() {
@@ -70,14 +72,13 @@ export function useTooltip(props: IProps) {
       return
     }
 
-    const rect = domElement.getBoundingClientRect()
-    camera.updateMatrixWorld()
-    projectedPosition.copy(intersection.object.position).project(camera)
+    const nextTooltipState = calculateTooltipState(intersection.object, camera, domElement)
+    if (!nextTooltipState) {
+      clearTooltip()
+      return
+    }
 
-    tooltip.content = intersection.object.userData as TooltipContent
-    tooltip.x = ((projectedPosition.x + 1) / 2) * rect.width
-    tooltip.y = ((-projectedPosition.y + 1) / 2) * rect.height
-    tooltip.visible = true
+    Object.assign(tooltip, nextTooltipState)
   }
 
   function updatePointer(event: MouseEvent) {
@@ -87,7 +88,7 @@ export function useTooltip(props: IProps) {
 
     pointer.set(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      -((event.clientY - rect.top) / rect.height) * 2 + 1
     )
     return true
   }
@@ -107,6 +108,6 @@ export function useTooltip(props: IProps) {
   })
 
   return {
-    tooltip,
+    tooltip
   }
 }
