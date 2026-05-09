@@ -1,10 +1,23 @@
 <script setup lang="ts">
+import type { Ref } from 'vue'
 import { gsap } from 'gsap'
 import * as THREE from 'three'
-import { onMounted, onUnmounted, useTemplateRef } from 'vue'
-import { PositionSprite, Room } from './utils'
+import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
+import { PositionSprite, Room, TooltipSprite } from './utils'
 
 const container = useTemplateRef<HTMLDivElement>('container')
+const toolTipContainer = useTemplateRef<HTMLDivElement>('toolTipContainer')
+
+const toolTipContent: Ref<Record<string, any>> = ref({
+  name: '',
+  type: '',
+  description: '',
+})
+const toolipPosition = ref({
+  left: '-100%',
+  top: '-100%',
+})
+
 /**
  * 初始化场景
  */
@@ -32,8 +45,47 @@ camera.rotation.order = 'YXZ'
  */
 const renderer = new THREE.WebGLRenderer() // 创建渲染器
 
+const spriteList: THREE.Sprite[] = []
+
+spriteList.push(
+  new TooltipSprite(
+    '/images/dot.png',
+    new THREE.Vector3(3, 1, 2),
+    scene,
+    camera,
+    {
+      name: '艺术画',
+      description: '这是一件艺术化的作品，展现了独特的设计理念',
+      type: 'information',
+    },
+  ).sprite,
+  new TooltipSprite(
+    './images/dot.png',
+    new THREE.Vector3(-2.5, -0.1, -3),
+    scene,
+    camera,
+    {
+      name: '木雕艺术品',
+      description: '这是一件木雕艺术品，展现了精湛的工艺和设计',
+      type: 'information',
+    },
+  ).sprite,
+  new TooltipSprite(
+    './images/dot.png',
+    new THREE.Vector3(1.5, -0.1, -3),
+    scene,
+    camera,
+    {
+      name: '工艺画',
+      description: '十分抽象的工艺画，给人一种很有艺术感的感觉',
+      type: 'information',
+    },
+  ).sprite,
+)
+
 let room: Room | null = null
 let balconyRoom: Room | null = null
+let kitchenRoom: Room | null = null
 
 const sprites: PositionSprite[] = []
 let animationFrameId: number | null = null
@@ -87,6 +139,8 @@ function listenerContainerEvents(target: HTMLDivElement) {
   target.addEventListener('mouseup', handleDragEnd, false)
   target.addEventListener('mouseout', handleDragEnd, false)
   target.addEventListener('mousemove', handleDragMove, false)
+  renderer.domElement.addEventListener('mousemove', e => tooltipShow(e, spriteList))
+  toolTipContainer.value!.addEventListener('mouseleave', tootipHide)
 }
 
 function unListenerContainerEvents(target: HTMLDivElement) {
@@ -96,18 +150,84 @@ function unListenerContainerEvents(target: HTMLDivElement) {
   target.removeEventListener('mousemove', handleDragMove, false)
 }
 
-function animateCameraTo(z: number) {
+function animateCameraTo(x: number = 0, y: number = 0, z: number = 0) {
   gsap.to(camera.position, {
     duration: 1,
-    x: 0,
-    y: 0,
+    x,
+    y,
     z,
   })
 }
 
+const raycaster = new THREE.Raycaster()
+const pointer = new THREE.Vector2()
+
+function tooltipShow(event: MouseEvent, spriteList: THREE.Sprite[]) {
+  event.preventDefault()
+  // 获取到当前鼠标位置
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+  // 通过摄像机和鼠标位置更新射线
+  raycaster.setFromCamera(pointer, camera)
+  // 计算物体和射线的交点
+  const intersects = raycaster.intersectObjects(spriteList)
+  if (intersects.length && intersects[0].object.userData.type === 'information') {
+    // 要设置鼠标的 left 和 top 就需要获取鼠标所在的位置
+    // 获取所在的位置就需要将三维的坐标转换为二维的坐标
+    // Vector3 对象的 project 方法可以将三维坐标转为 NDC 坐标
+    // const vector = new THREE.Vector3(10, 20, 30)
+    // vector.project(camera)
+    // 通过固定的公式可以将 NDC 坐标转换为屏幕坐标
+    // x = (vector.x + 1) * (width / 2)
+    // y = (vector.y + 1) * (height / 2)
+    const element = event.target as HTMLElement
+    const elementWidth = element.clientWidth / 2
+    const elementHeight = element.clientHeight / 2
+    const vector = new THREE.Vector3(intersects[0].object.position.x, intersects[0].object.position.y, intersects[0].object.position.z)
+    const position = vector.project(camera)
+
+    const left = Math.round(
+      elementWidth * position.x
+      + elementWidth
+      - toolTipContainer.value!.clientWidth / 2,
+    )
+
+    const top = Math.round(
+      -elementHeight * position.y
+      + elementHeight
+      - toolTipContainer.value!.clientHeight / 2,
+    )
+
+    toolipPosition.value = {
+      left: `${left}px`,
+      top: `${top}px`,
+    }
+
+    toolTipContent.value = intersects[0].object.userData
+  }
+  else {
+    tootipHide(event)
+  }
+}
+
+function tootipHide(event: MouseEvent) {
+  event.preventDefault()
+  toolipPosition.value = {
+    left: '-100%',
+    top: '-100%',
+  }
+  toolTipContent.value = {
+    name: '',
+    type: '',
+    description: '',
+  }
+}
+
 function initRooms() {
   room = new Room('客厅', 'living', '/images/livingRoom/', scene)
-  balconyRoom = new Room('阳台', 'balcony', '/images/balcony/', scene, new THREE.Vector3(0, 0, -10))
+  balconyRoom = new Room('阳台', 'balcony', '/images/balcony/', scene, new THREE.Vector3(2, 0, -10))
+  kitchenRoom = new Room('厨房', 'kitchen', '/images/kitchen/', scene, new THREE.Vector3(0, 0, 10))
 }
 
 function initSprites() {
@@ -130,7 +250,29 @@ function initSprites() {
     renderer.domElement,
   )
   sprites.push(balconyBackSprite)
-  balconyBackSprite.onClick(() => animateCameraTo(0))
+  balconyBackSprite.onClick(() => animateCameraTo())
+
+  balconySprite.onClick(() => animateCameraTo(0, 0, -10))
+
+  const kitchenSprite = new PositionSprite(
+    '厨房',
+    new THREE.Vector3(1.5, 0, 4),
+    scene,
+    camera,
+    renderer.domElement,
+  )
+  sprites.push(kitchenSprite)
+  kitchenSprite.onClick(() => animateCameraTo(2, 0, 10))
+
+  const kitchenBackSprite = new PositionSprite(
+    '客厅',
+    new THREE.Vector3(1, 0, 6),
+    scene,
+    camera,
+    renderer.domElement,
+  )
+  sprites.push(kitchenBackSprite)
+  kitchenBackSprite.onClick(() => animateCameraTo())
 }
 
 function mountScene() {
@@ -176,6 +318,10 @@ onUnmounted(() => {
 
 <template>
   <div ref="container" class="container" />
+  <div ref="toolTipContainer" class="tooltip" :style="toolipPosition">
+    <div>{{ toolTipContent.name }}</div>
+    <div>{{ toolTipContent.description }}</div>
+  </div>
 </template>
 
 <style lang="scss">
@@ -188,5 +334,15 @@ onUnmounted(() => {
 .container {
   width: 100vw;
   height: 100vh;
+}
+
+.tooltip {
+  position: absolute;
+  padding: 0px 0px 40px 0px;
+  line-height: 30px;
+  border-radius: 4px;
+  color: #fff;
+  z-index: 100;
+  cursor: pointer;
 }
 </style>
