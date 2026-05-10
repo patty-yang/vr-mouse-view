@@ -48,6 +48,8 @@ export function useTooltip(props: UseTooltipOptions) {
   const tooltipSpriteList = points.map(item => createTooltipSprite(scene, item))
   const pointer = new THREE.Vector2()
   const raycaster = new THREE.Raycaster()
+  let activeSprite: THREE.Sprite | null = null
+  let animationFrameId = 0
 
   const tooltip = reactive<TooltipOverlayState>({
     content: null,
@@ -57,8 +59,21 @@ export function useTooltip(props: UseTooltipOptions) {
   })
 
   function clearTooltip() {
+    activeSprite = null
     tooltip.content = null
     tooltip.visible = false
+  }
+
+  function updateTooltipPosition() {
+    if (activeSprite) {
+      const nextTooltipState = calculateTooltipState(activeSprite, camera, domElement)
+      if (nextTooltipState)
+        Object.assign(tooltip, nextTooltipState)
+      else
+        clearTooltip()
+    }
+
+    animationFrameId = requestAnimationFrame(updateTooltipPosition)
   }
 
   function handleClick(event: MouseEvent) {
@@ -72,6 +87,7 @@ export function useTooltip(props: UseTooltipOptions) {
       return
     }
 
+    activeSprite = intersection.object
     const nextTooltipState = calculateTooltipState(intersection.object, camera, domElement)
     if (!nextTooltipState) {
       clearTooltip()
@@ -95,10 +111,13 @@ export function useTooltip(props: UseTooltipOptions) {
 
   onMounted(() => {
     domElement.addEventListener('click', handleClick)
+    updateTooltipPosition()
   })
 
   onUnmounted(() => {
     domElement.removeEventListener('click', handleClick)
+    if (animationFrameId)
+      cancelAnimationFrame(animationFrameId)
     clearTooltip()
     tooltipSpriteList.forEach(({ sprite, texture, material }) => {
       sprite.parent?.remove(sprite)

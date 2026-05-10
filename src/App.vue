@@ -53,7 +53,6 @@ function animateCameraTo([x, y, z]: Vector3Coordinates = defaultCameraTarget) {
       }"
     >
       <div>{{ tooltip.content.name }}</div>
-      <div>{{ tooltip.content.type }}</div>
       <div>{{ tooltip.content.description }}</div>
     </div>
   </div>
