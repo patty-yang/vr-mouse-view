@@ -2,7 +2,9 @@ import type { Ref } from 'vue'
 import * as THREE from 'three'
 import { onMounted, onUnmounted } from 'vue'
 
+// 接近正上方/正下方时如果继续旋转，视角会产生“翻过去”的不适感，所以留一点余量。
 const MAX_PITCH = Math.PI / 2 - 0.01
+// 鼠标每移动 1px 对应的旋转增量。
 const ROTATE_SPEED = 0.01
 
 export function useSceneEvents(camera: THREE.Camera, target: Ref<HTMLDivElement | null>) {
@@ -21,6 +23,7 @@ export function useSceneEvents(camera: THREE.Camera, target: Ref<HTMLDivElement 
     if (!isDragging)
       return
 
+    // 上下拖动对应 pitch（抬头/低头），左右拖动对应 yaw（向左/向右转头）。
     camera.rotation.x = THREE.MathUtils.clamp(
       camera.rotation.x + event.movementY * ROTATE_SPEED,
       -MAX_PITCH,

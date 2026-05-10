@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { onMounted, onUnmounted } from 'vue'
 
 function createCanvas(label: string): HTMLCanvasElement {
+  // 导航标签先画在 canvas 上，再作为纹理贴到 Sprite 上，这样能直接复用 2D 文本能力。
   const canvas = document.createElement('canvas')
   canvas.width = 716
   canvas.height = 310
@@ -58,6 +59,7 @@ function createSprite(props: CreateNavigationSpriteOptions) {
   const raycaster = new THREE.Raycaster()
   sprite.position.copy(position)
   sprite.scale.set(
+    // 根据画布尺寸给出一个近似的世界尺寸，让热点在不同分辨率下保持稳定比例。
     canvas.width / 1024,
     canvas.height / 1024,
     1
@@ -69,6 +71,7 @@ function createSprite(props: CreateNavigationSpriteOptions) {
     if (rect.width <= 0 || rect.height <= 0)
       return
 
+    // MouseEvent 是屏幕像素坐标，Raycaster 需要的是 [-1, 1] 范围的标准化设备坐标。
     const pointer = new THREE.Vector2(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
       -((event.clientY - rect.top) / rect.height) * 2 + 1
@@ -76,6 +79,7 @@ function createSprite(props: CreateNavigationSpriteOptions) {
 
     raycaster.setFromCamera(pointer, camera)
 
+    // 事件绑定在渲染 canvas 上，再通过射线判断这次点击是否真正落在热点精灵上。
     if (raycaster.intersectObject(sprite).length > 0)
       onClick()
   }

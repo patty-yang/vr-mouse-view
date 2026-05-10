@@ -1,29 +1,35 @@
 import type { NavigationHotspot, TooltipHotspot, Vector3Coordinates } from '../types'
 import * as THREE from 'three'
 
+// 未显式指定目标点时，相机默认回到当前房间的中心观察方向。
 export const defaultCameraTarget: Vector3Coordinates = [0, 0, 0]
 
 export const navigationPoints: NavigationHotspot[] = [
   {
+    // 从客厅跳到阳台。
     label: '阳台',
     position: new THREE.Vector3(0, 0, -4),
     cameraTarget: [0, 0, -10]
   },
   {
+    // 阳台回到客厅。
     label: '客厅',
     position: new THREE.Vector3(1, 0, -6)
   },
   {
+    // 从客厅跳到厨房。
     label: '厨房',
     position: new THREE.Vector3(1.5, 0, 4),
     cameraTarget: [2, 0, 10]
   },
   {
+    // 厨房回到客厅。
     label: '客厅',
     position: new THREE.Vector3(1, 0, 6)
   }
 ]
 
+// 提示点同样走配置，位置决定它在 3D 空间中的锚点，content 决定浮层文案。
 export const tooltipPoints: TooltipHotspot[] = [
   {
     textureUrl: '/images/dot.png',

@@ -15,6 +15,7 @@ function createTooltipSprite(scene: THREE.Scene, { position, textureUrl, content
   const sprite = new THREE.Sprite(material)
   sprite.position.copy(position)
   sprite.scale.set(0.2, 0.2, 0.2)
+  // 把浮层要展示的数据直接挂在 sprite 上，拾取到对象后就能立刻拿到文案。
   sprite.userData = content
 
   scene.add(sprite)
@@ -31,6 +32,7 @@ function calculateTooltipState(sprite: THREE.Sprite, camera: THREE.Camera, domEl
   if (rect.width <= 0 || rect.height <= 0)
     return null
 
+  // 把 3D 世界坐标投影到屏幕平面，得到 DOM 浮层应该出现的位置。
   const projectedPosition = sprite.position.clone()
   camera.updateMatrixWorld()
   projectedPosition.project(camera)
@@ -48,6 +50,7 @@ export function useTooltip(props: UseTooltipOptions) {
   const tooltipSpriteList = points.map(item => createTooltipSprite(scene, item))
   const pointer = new THREE.Vector2()
   const raycaster = new THREE.Raycaster()
+  // 当前被选中的点位。相机继续移动时，tooltip 要跟着它实时更新位置。
   let activeSprite: THREE.Sprite | null = null
   let animationFrameId = 0
 
@@ -66,6 +69,7 @@ export function useTooltip(props: UseTooltipOptions) {
 
   function updateTooltipPosition() {
     if (activeSprite) {
+      // tooltip 是 DOM，不会自动跟着 Three.js 相机变化，所以每帧都要重新计算位置。
       const nextTooltipState = calculateTooltipState(activeSprite, camera, domElement)
       if (nextTooltipState)
         Object.assign(tooltip, nextTooltipState)
@@ -81,6 +85,7 @@ export function useTooltip(props: UseTooltipOptions) {
       return
 
     raycaster.setFromCamera(pointer, camera)
+    // 只要点击没有命中任何提示点，就关闭当前 tooltip。
     const [intersection] = raycaster.intersectObjects(tooltipSpriteList.map(({ sprite }) => sprite))
     if (!(intersection?.object instanceof THREE.Sprite)) {
       clearTooltip()
@@ -102,6 +107,7 @@ export function useTooltip(props: UseTooltipOptions) {
     if (rect.width <= 0 || rect.height <= 0)
       return false
 
+    // Three.js 射线拾取统一使用标准化设备坐标，所以这里做一次像素坐标转换。
     pointer.set(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
       -((event.clientY - rect.top) / rect.height) * 2 + 1
@@ -119,6 +125,7 @@ export function useTooltip(props: UseTooltipOptions) {
     if (animationFrameId)
       cancelAnimationFrame(animationFrameId)
     clearTooltip()
+    // 手动创建的 sprite / texture / material 都不受 Vue 管理，离开页面时要主动清理。
     tooltipSpriteList.forEach(({ sprite, texture, material }) => {
       sprite.parent?.remove(sprite)
       texture.dispose()
