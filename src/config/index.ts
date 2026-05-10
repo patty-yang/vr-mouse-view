@@ -29,8 +29,8 @@ export const tooltipPoints: TooltipHotspot[] = [
     textureUrl: '/images/dot.png',
     position: new THREE.Vector3(3, 1, 2),
     content: {
-      name: '艺术画',
-      description: '这是一件艺术化的作品，展现了独特的设计理念',
+      name: '无题构成',
+      description: '像被截取的一段感知，色块与留白在视线里维持着微妙的张力',
       type: 'information'
     }
   },
@@ -38,8 +38,8 @@ export const tooltipPoints: TooltipHotspot[] = [
     textureUrl: '/images/dot.png',
     position: new THREE.Vector3(-2.5, -0.1, -3),
     content: {
-      name: '木雕艺术品',
-      description: '这是一件木雕艺术品，展现了精湛的工艺和设计',
+      name: '时间的纹理',
+      description: '木质的肌理被缓慢转译成记忆的痕迹，在静默中保留手作的呼吸',
       type: 'information'
     }
   },
@@ -47,8 +47,8 @@ export const tooltipPoints: TooltipHotspot[] = [
     textureUrl: '/images/dot.png',
     position: new THREE.Vector3(1.5, -0.1, -3),
     content: {
-      name: '工艺画',
-      description: '十分抽象的工艺画，给人一种很有艺术感的感觉',
+      name: '漂移的边界',
+      description: '形体与意象在这里轻微错位，像现实表面浮起的一层回声',
       type: 'information'
     }
   }
